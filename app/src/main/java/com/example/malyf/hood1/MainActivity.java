@@ -139,8 +139,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
 }
-class RealTimeUpdateTask extends AsyncTask<URL,Void,String>{
+class RealTimeUpdateTask extends AsyncTask<URL,String,String>{
     private int i=0;
     Exception err;
     String response;
@@ -174,15 +175,26 @@ class RealTimeUpdateTask extends AsyncTask<URL,Void,String>{
             i++;
             if(i>=90){i=0;}
             try {
-                JSONObject jsonObject= new JSONObject(response);
-                tv1.setText(jsonObject.getString("hum"));
-                tv2.setText(jsonObject.getString("temp"));
-                Thread.sleep(3000);
+                Log.e("Response22222222", response);
+                if(response!="") {
+                    JSONObject jsonObject = new JSONObject(response);
+                    Thread.sleep(1000);
+                    publishProgress(jsonObject.getString("hum"), jsonObject.getString("temp"));
+                }
             } catch (InterruptedException e) {
+                Log.e("Response Exception",response);
                 e.printStackTrace();
+
             }
         }}catch (Exception e){e.printStackTrace();}
         return response;
+    }
+
+    @Override
+    protected void onProgressUpdate(String... values) {
+        Log.i("published String", values[0]+"  "+values[1]);
+        tv1.setText(values[0]);
+        tv2.setText(values[1]);
     }
 
     @Override
