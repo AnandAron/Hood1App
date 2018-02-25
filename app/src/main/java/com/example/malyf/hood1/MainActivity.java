@@ -31,6 +31,10 @@ import java.util.concurrent.ExecutionException;
 
 import static com.example.malyf.hood1.MainActivity.tv1;
 import static com.example.malyf.hood1.MainActivity.tv2;
+import static com.example.malyf.hood1.MainActivity.rel1Btn;
+import static com.example.malyf.hood1.MainActivity.rel2Btn;
+import static com.example.malyf.hood1.MainActivity.rel3Btn;
+import static com.example.malyf.hood1.MainActivity.rel4Btn;
 
 public class MainActivity extends AppCompatActivity {
     public static String sip;
@@ -115,11 +119,11 @@ public class MainActivity extends AppCompatActivity {
 
         Drawable whiteBg=getResources().getDrawable(R.drawable.white_bg);
         Drawable blueBg=getResources().getDrawable(R.drawable.blue_bg);
-        Log.i("postRelStatus: ",responseJson.getString("rel1"));
+        /*Log.i("postRelStatus: ",responseJson.getString("rel1"));
         Log.i("postRelStatus: ",responseJson.getString("rel2"));
         Log.i("postRelStatus: ",responseJson.getString("rel3"));
         Log.i("postRelStatus: ",responseJson.getString("rel4"));
-        Log.i("###############",""+responseJson.getString("rel1").equals("1"));
+        Log.i("###############",""+responseJson.getString("rel1").equals("1"));*/
         if(responseJson.getString("rel1").equals("1")){
             rel1Btn.setBackground(blueBg);
         }else rel1Btn.setBackground(whiteBg);
@@ -141,65 +145,94 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
-class RealTimeUpdateTask extends AsyncTask<URL,String,String>{
-    private int i=0;
-    Exception err;
-    String response;
+
+class RealTimeUpdateTask extends AsyncTask<URL, String, String> {
+    private int i = 0;
+
+    private String response;
+
     @Override
     protected String doInBackground(URL... urls) {
-        Log.i("RealTimeUpdateTask","doinBackground");
-        try{
-        while(i<100){
-            Log.i("RealTimeUpdateTask","calling UpdateTask");
-            try {
+        Log.i("RealTimeUpdateTask", "doinBackground");
+        try {
+            while (i < 100) {
+                Log.i("RealTimeUpdateTask", "calling UpdateTask");
+                try {
 
-                URL url = new URL("http://" + MainActivity.sip + ":" + MainActivity.monitorPort + "/");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setDoOutput(true);
-                conn.setRequestProperty("Content-Type", "application/json");
-                String line;
-                response="";
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                        conn.getInputStream()));
-                while ((line = br.readLine()) != null) {
-                    response += line;
-                    Log.e("Response", response);
+                    URL url = new URL("http://" + MainActivity.sip + ":" + MainActivity.monitorPort + "/");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setDoOutput(true);
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    String line;
+                    response = "";
+                    BufferedReader br = new BufferedReader(new InputStreamReader(
+                            conn.getInputStream()));
+                    while ((line = br.readLine()) != null) {
+                        response += line;
+                        Log.e("Response", response);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
-            } catch (Exception e) {
-                err = e;
-
-            }
-
-            i++;
-            if(i>=90){i=0;}
-            try {
-                Log.e("Response22222222", response);
-                if(response!="") {
-                    JSONObject jsonObject = new JSONObject(response);
-                    Thread.sleep(1000);
-                    publishProgress(jsonObject.getString("hum"), jsonObject.getString("temp"));
+                i++;
+                if (i >= 90) {
+                    i = 0;
                 }
-            } catch (InterruptedException e) {
-                Log.e("Response Exception",response);
-                e.printStackTrace();
-
+                try {
+                    Log.e("Response22222222", response);
+                    if (response != "") {
+                        JSONObject jsonObject = new JSONObject(response);
+                        Thread.sleep(500);
+                        publishProgress(jsonObject.getString("hum"),
+                                jsonObject.getString("temp"),
+                                jsonObject.getString("rel1"),
+                                jsonObject.getString("rel2"),
+                                jsonObject.getString("rel3"),
+                                jsonObject.getString("rel4")
+                                );
+                    }
+                } catch (InterruptedException e) {
+                    Log.e("Response Exception",response);
+                    e.printStackTrace();
+                }
             }
-        }}catch (Exception e){e.printStackTrace();}
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return response;
     }
 
     @Override
     protected void onProgressUpdate(String... values) {
         Log.i("published String", values[0]+"  "+values[1]);
+        Drawable whiteBg=MainActivity.mainCtx.getResources().getDrawable(R.drawable.white_bg);
+        Drawable blueBg=MainActivity.mainCtx.getResources().getDrawable(R.drawable.blue_bg);
         tv1.setText(values[0]);
         tv2.setText(values[1]);
+        if(values[2].equals("1")){
+            rel1Btn.setBackground(blueBg);
+        }else rel1Btn.setBackground(whiteBg);
+
+        if(values[3].equals("1")){
+            rel2Btn.setBackground(blueBg);
+        }else rel2Btn.setBackground(whiteBg);
+
+        if(values[4].equals("1")){
+            rel3Btn.setBackground(blueBg);
+        }else rel3Btn.setBackground(whiteBg);
+
+        if(values[5].equals("1")){
+            rel4Btn.setBackground(blueBg);
+        }else rel4Btn.setBackground(whiteBg);
+
+
+
     }
 
-    @Override
-    protected void onPostExecute(String s) {
-        }
 }
 
 
@@ -227,22 +260,8 @@ class PostTask extends AsyncTask<URL, Void, String> {
             while ((line = br.readLine()) != null) {
                 response += line;
                 Log.e("Response", response);
-
-
-
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        } catch (Exception e) {e.printStackTrace();}
         return response;
     }
-
-    @Override
-    protected void onPostExecute(String s) {
-
-
-    }
-
 }
