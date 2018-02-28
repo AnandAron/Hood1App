@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,12 +30,13 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
-import static com.example.malyf.hood1.MainActivity.tv1;
-import static com.example.malyf.hood1.MainActivity.tv2;
 import static com.example.malyf.hood1.MainActivity.rel1Btn;
 import static com.example.malyf.hood1.MainActivity.rel2Btn;
 import static com.example.malyf.hood1.MainActivity.rel3Btn;
 import static com.example.malyf.hood1.MainActivity.rel4Btn;
+import static com.example.malyf.hood1.MainActivity.tv1;
+import static com.example.malyf.hood1.MainActivity.tv2;
+
 
 public class MainActivity extends AppCompatActivity {
     public static String sip;
@@ -76,8 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 "}";
 
         Log.i("Oncreate()","RealTimeUpdateTask()");
-
-            new RealTimeUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new InitialUpdate().execute();
+            //new RealTimeUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
 
@@ -213,7 +215,7 @@ class RealTimeUpdateTask extends AsyncTask<URL, String, String> {
         Drawable blueBg=MainActivity.mainCtx.getResources().getDrawable(R.drawable.blue_bg);
         tv1.setText(values[0]);
         tv2.setText(values[1]);
-        if(values[2].equals("1")){
+        /*if(values[2].equals("1")){
             rel1Btn.setBackground(blueBg);
         }else rel1Btn.setBackground(whiteBg);
 
@@ -228,7 +230,7 @@ class RealTimeUpdateTask extends AsyncTask<URL, String, String> {
         if(values[5].equals("1")){
             rel4Btn.setBackground(blueBg);
         }else rel4Btn.setBackground(whiteBg);
-
+*/
 
 
     }
@@ -263,5 +265,58 @@ class PostTask extends AsyncTask<URL, Void, String> {
             }
         } catch (Exception e) {e.printStackTrace();}
         return response;
+    }
+}
+class InitialUpdate extends AsyncTask<URL, Void, String> {
+    private String response;
+    @Override
+    protected String doInBackground(URL... urls) {
+        try {
+
+            URL url = new URL("http://" + MainActivity.sip + ":" + MainActivity.monitorPort + "/");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            String line;
+            response = "";
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    conn.getInputStream()));
+            while ((line = br.readLine()) != null) {
+                response += line;
+                Log.e("Response", response);
+            }
+            Drawable whiteBg=MainActivity.mainCtx.getResources().getDrawable(R.drawable.white_bg);
+            Drawable blueBg=MainActivity.mainCtx.getResources().getDrawable(R.drawable.blue_bg);
+            JSONObject responseJson=new JSONObject(response);
+            if(responseJson.getString("rel1").equals("1")){
+                rel1Btn.setBackground(blueBg);
+            }else rel1Btn.setBackground(whiteBg);
+
+            if(responseJson.getString("rel2").equals("1")){
+                rel2Btn.setBackground(blueBg);
+            }else rel2Btn.setBackground(whiteBg);
+
+            if(responseJson.getString("rel3").equals("1")){
+                rel3Btn.setBackground(blueBg);
+            }else rel3Btn.setBackground(whiteBg);
+
+            if(responseJson.getString("rel4").equals("1")){
+                rel4Btn.setBackground(blueBg);
+            }else rel4Btn.setBackground(whiteBg);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(String s) {
+
+
+        new RealTimeUpdateTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
     }
 }
